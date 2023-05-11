@@ -2,6 +2,15 @@ package neuralnetwork;
 
 import MatrixVector.*;
 import activationFunctions.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.InputMismatchException;
 
 /**
  * this network follows the format and techniques outlined in the following:
@@ -37,6 +46,14 @@ public class Network {
             weights[i] = new Matrix(networkInfo[i + 1], networkInfo[i]);
         }
     }
+    
+    private void setBias(int l, int j, double val){
+        biases[l].setValue(j, val);
+    }
+    
+    private void setweight(int l, int j, int k, double val){
+        weights[l].setVal(j, k, val);
+    }
 
     public void setInput(Vector input) throws VectorDimensionsDoNotMatchException {
 
@@ -47,15 +64,15 @@ public class Network {
         values[0] = input;
 
     }
-    
-    public void InitializeWeightsAsIdentities(){
+
+    public void InitializeWeightsAsIdentities() {
         for (var weight : weights) {
             weight.InitializeAsIdentity();
         }
     }
-    
-    public void InitializeRandomBiases(){
-        for (var bias : biases){
+
+    public void InitializeRandomBiases() {
+        for (var bias : biases) {
             for (int i = 0; i < bias.getDimension(); i++) {
                 bias.setValue(i, Math.random());
             }
@@ -69,7 +86,7 @@ public class Network {
     public void compute(Function actiFunc) {
 
         for (int i = 1; i < networkInfo.length; i++) {//not calculating the values for the first layer
-            Z[i - 1] = weights[i - 1].multiply(values[i - 1]).add(biases[i-1]);
+            Z[i - 1] = weights[i - 1].multiply(values[i - 1]).add(biases[i - 1]);
             values[i] = Z[i - 1].applyFunction(actiFunc);
         }
 
@@ -82,7 +99,7 @@ public class Network {
 
         for (int i = networkInfo.length - 3; i > 0; i--) {
 
-            errors[i] = weights[i + 1].multiply(errors[i + 1]).HadamardProduct(Z[i].applyDir(actiFunc));
+            errors[i] = weights[i + 1].multiplyTranspose(errors[i + 1]).HadamardProduct(Z[i].applyDir(actiFunc));
 
         }
     }
@@ -126,26 +143,116 @@ public class Network {
     public void batchGradientDiscent(Vector expected, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
 
         compute(actiFunc);
-        
-        backPropogate(actiFunc,getOutput(),expected);
+
+        backPropogate(actiFunc, getOutput(), expected);
 
         //System.out.println(cost(getOutput(),expected));
-        
         for (int l = 0; l < networkInfo.length - 1; l++) {//for every layer
             for (int j = 0; j < networkInfo[l + 1]; j++) {//for every weight vector
                 for (int k = 0; k < networkInfo[l]; k++) {//for every weight in the vector
 
-                    weights[l].setVal(j, k, weights[l].getVal(j, k) -findWeightSlope(l,j,k) * stepSize);
-                    
+                    double slope = findWeightSlope(l, j, k);
+
+                    weights[l].setVal(j, k, weights[l].getVal(j, k) - (slope / (slope * slope + 1)) * stepSize);
+
                 }
             }
         }
 
         for (int l = 0; l < biases.length; l++) {
             for (int j = 0; j < biases[l].getDimension(); j++) {
-                biases[l].setValue(j,biases[l].getValue(j) -findBiasSlope(l).getValue(j) * stepSize);
+
+                double slope = findBiasSlope(l).getValue(j);
+
+                biases[l].setValue(j, biases[l].getValue(j) - (slope / (slope * slope + 1)) * stepSize);
+
             }
         }
         //System.out.println(cost(getOutput(),expected));
+    }
+
+    public void export(File file) throws IOException {
+        PrintWriter writer = new PrintWriter(
+                new BufferedWriter(
+                        new FileWriter(file)));
+        //file formatt:
+        writer.println(networkInfo.length);//number of layers
+        for (int size : networkInfo) {
+            writer.println(size);// the size of each layer
+        }
+        for (Vector biasvec : biases) {
+            for (double bias : biasvec.getContents()) {
+                writer.println(bias);//every bias for every perceptron in the network
+            }
+        }
+        for (Matrix weightMat : weights) {
+            for (int i = 0; i < weightMat.getDimensions()[0]; i++) {
+                for (int j = 0; j < weightMat.getDimensions()[1]; j++) {
+                    writer.println(weightMat.getVal(i, j));//every weight
+                }
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
+    
+    public static Network importf(File file) throws FileNotFoundException, IOException {
+
+        Network output = null;
+
+        try {
+            BufferedReader reader = new BufferedReader(
+                    new FileReader(file));
+
+            String line = reader.readLine();
+
+            int numLayers = Integer.parseInt(line);// getting the number of layers
+            int[] networkInfo = new int[numLayers];
+
+            for (int i = 0; i < numLayers; i++) {
+                line = reader.readLine();
+                networkInfo[i] = Integer.parseInt(line);//getting the layer sizes and setting the array to match
+            }
+
+            output = new Network(networkInfo);
+
+            for (int l = 0; l < networkInfo.length - 1; l++) {
+                for (int j = 0; j < networkInfo[l]; j++) {
+
+                    line = reader.readLine();
+
+                    double biasVal = Double.parseDouble(line);//getting all the biases
+
+                    output.setBias(l, j, biasVal);
+                }
+            }
+
+            for (int l = 0; l < networkInfo.length - 1; l++) {
+
+                for (int j = 0; j < networkInfo[l+1]; j++) {
+
+                    for (int k = 0; k < networkInfo[l]; k++) {
+
+                        line = reader.readLine();
+
+                        double weightVal = Double.parseDouble(line);
+                        
+                        output.setweight(l, j, k, weightVal);
+
+                    }
+                }
+            }
+
+            reader.close();
+
+            return output;
+
+        } catch (InputMismatchException e) {
+            System.out.println("file not in the correct formatt");
+            e.printStackTrace();
+            return output;
+
+        }
+
     }
 }

@@ -8,8 +8,12 @@ import MatrixVector.*;
 import activationFunctions.Function;
 import activationFunctions.ReLU;
 import chess.ChessBoard;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import neuralnetwork.Network;
 
 /**
@@ -25,8 +29,10 @@ public class ChessBotTrainer {
         
         Function actiFunc = new ReLU();
         
-        //8192
-        int[] networkInfo = {65 , 8192, 4096, 4096};
+        File exportLoc = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\ChessBotWhite.nnet");
+        File exportLoc2 = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\ChessBotBlack.nnet");
+        
+        int[] networkInfo = {65 , 105, 226, 427, 709, 1072, 1515, 2039, 2643, 3328, 4096};
         
         Network nnet1 = new Network(networkInfo);
         ArrayList<Vector[]> nnet1TurnHistory = new ArrayList<>();
@@ -47,6 +53,7 @@ public class ChessBotTrainer {
         System.out.println("all structures initialized!");
         
         int rep = 0;
+        int turnsPlayed = 0;
         
         while(!cb.checkMate(1) && !cb.checkMate(0)){
             
@@ -93,12 +100,15 @@ public class ChessBotTrainer {
             
             int[] coordinates = ChessBoard.indexToCoordinates(choice);
             
+            System.out.println(turnsPlayed);
             System.out.println("(" + (coordinates[0]+1) + "," + (coordinates[1]+1) + ") --> (" + (coordinates[2]+1) + "," + (coordinates[3]+1) + ")");
             
             //taking the move specified by the network
             if (!cb.takeNextTurn(coordinates[0]+1, coordinates[1]+1, coordinates[2]+1, coordinates[3]+1)){
                 legalMove = false;
             }else{
+                rep = 0;
+                turnsPlayed++;
                 System.out.println(cb.toString());
             }
             
@@ -110,7 +120,7 @@ public class ChessBotTrainer {
                 System.out.println(rep);
                 
                 
-                reward = -10;
+                reward = -50;
                                
                 // making the chosen move 10% less likly given the same context
                 //System.out.println(output[choice]);
@@ -123,17 +133,18 @@ public class ChessBotTrainer {
                 //System.out.println("##########");
                 
 
-                currentPlayer.batchGradientDiscent(output,0.00000000001, actiFunc);
+                currentPlayer.batchGradientDiscent(new Vector(temp),0.00002, actiFunc);
                 
                 currentPlayer.compute(actiFunc);
                 
                 //System.out.println(currentPlayer.getOutput()[choice]);
                 
-                double newLoss = currentPlayer.cost(currentPlayer.getOutput(), output);
+                double newLoss = currentPlayer.cost(currentPlayer.getOutput(), new Vector(temp));
                 
                 
                 //System.out.println(currentPlayer.getOutput()[choice]);
                 System.out.println(originalLoss + " -> " + newLoss);
+                System.out.println((originalLoss - newLoss)/originalLoss);
                 System.out.println("##########");
                 
             }else{//in the proccess of recording turn history and training the neural network acording to rewards
@@ -158,6 +169,13 @@ public class ChessBotTrainer {
             System.out.println("black wins!");
             adjustWeights(nnet2,nnet2TurnHistory,nnet2ChoiceHistory,50,numOWeights,numOBiases,actiFunc);
             adjustWeights(nnet1,nnet1TurnHistory,nnet1ChoiceHistory,-50,numOWeights,numOBiases,actiFunc);
+        }
+        
+        try {
+            nnet1.export(exportLoc);
+            nnet2.export(exportLoc2);
+        } catch (IOException ex) {
+            Logger.getLogger(ChessBotTrainer.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
@@ -191,21 +209,17 @@ public class ChessBotTrainer {
         return output.getDimension() - 1;
     }
     
-    public static double quadraticCurveMaxOne(int x, int num){
-        
-        return (x*x)/(num*num);
-        
-    }
-    
     public static void adjustWeights(Network nnet, ArrayList<Vector[]> turnHistory, ArrayList<Integer> choiceHistory,
             double reward,int numOWeights,int numOBiases, Function actiFunc){
         
         for (int i = 0; i < choiceHistory.size(); i++) {
             Vector[] turn = turnHistory.get(i);
             int choice = choiceHistory.get(i);
-            turn[1].setValue(choice, turn[1].getValue(choice) * (1 + reward/100));
+            double[] output = turn[1].getContents().clone();
+            //adjusting the reward to increase with recency with a maximum at the given reward
+            output[choice] = turn[1].getValue(choice) * (1 + ((reward*(i+1)*(i+1))/(choiceHistory.size()*choiceHistory.size()))/100);
             nnet.setInput(turn[0]);
-            nnet.batchGradientDiscent(turn[1],quadraticCurveMaxOne(i,choiceHistory.size()), actiFunc);
+            nnet.batchGradientDiscent(new Vector(output),0.00002, actiFunc);
         }
         
     }

@@ -10,14 +10,16 @@ package MatrixVector;
  */
 public class Matrix {
 
-    double[][] contents;
-    int[] dimensions;
+    private double[][] contents;
+    private int[] dimensions;
+    boolean isTransposed;
 
     public Matrix(double[][] contents) {
         this.contents = contents;
         dimensions = new int[2];
         dimensions[0] = contents.length;
         dimensions[1] = contents[0].length;
+        isTransposed = false;
     }
 
     public Matrix(int[] dimensions) {
@@ -126,6 +128,29 @@ public class Matrix {
         return out;
 
     }
+    public Vector multiplyTranspose(Vector vec) throws MatrixDimensionsDoNotMatchException {
+
+        if (dimensions[0] != vec.getDimension()) {
+            throw new MatrixDimensionsDoNotMatchException();
+        }
+
+        Vector out = new Vector(dimensions[1]);
+
+        for (int i = 0; i < dimensions[1]; i++) {
+
+            double sum = 0;
+
+            for (int j = 0; j < dimensions[0]; j++) {
+                sum += contents[j][i] * vec.getValue(j);
+            }
+            
+            out.setValue(i, sum);
+            
+        }
+        
+        return out;
+
+    }
 
     public Matrix transpose() {
 
@@ -142,7 +167,8 @@ public class Matrix {
         return out;
 
     }
-
+    
+    
     public Vector toVector() throws MatrixDimensionsDoNotMatchException {
 
         if (dimensions[1] != 1) {
