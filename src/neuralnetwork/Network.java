@@ -40,18 +40,18 @@ public class Network {
             values[i] = new Vector(networkInfo[i]);
         }
         for (int i = 0; i < networkInfo.length - 1; i++) {
-            Z[i] = new Vector(networkInfo[i]);
+            Z[i] = new Vector(networkInfo[i+1]);
             biases[i] = new Vector(networkInfo[i + 1]);
             errors[i] = new Vector(networkInfo[i + 1]);
             weights[i] = new Matrix(networkInfo[i + 1], networkInfo[i]);
         }
     }
-    
-    private void setBias(int l, int j, double val){
+
+    private void setBias(int l, int j, double val) {
         biases[l].setValue(j, val);
     }
-    
-    private void setweight(int l, int j, int k, double val){
+
+    private void setweight(int l, int j, int k, double val) {
         weights[l].setVal(j, k, val);
     }
 
@@ -99,16 +99,19 @@ public class Network {
 
         for (int i = networkInfo.length - 3; i > 0; i--) {
 
+            //formula 2
             errors[i] = weights[i + 1].multiplyTranspose(errors[i + 1]).HadamardProduct(Z[i].applyDir(actiFunc));
 
         }
     }
 
     public double findWeightSlope(int l, int j, int k) {
+        //formula 4
         return values[l].getValue(k) * errors[l].getValue(j);
     }
 
     public Vector findBiasSlope(int l) {
+        //formula 3
         return errors[l];
     }
 
@@ -142,14 +145,14 @@ public class Network {
 
     public void batchGradientDiscent(Vector expected, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
 
-        compute(actiFunc);
-
-        backPropogate(actiFunc, getOutput(), expected);
-
         //System.out.println(cost(getOutput(),expected));
         for (int l = 0; l < networkInfo.length - 1; l++) {//for every layer
             for (int j = 0; j < networkInfo[l + 1]; j++) {//for every weight vector
                 for (int k = 0; k < networkInfo[l]; k++) {//for every weight in the vector
+
+                    compute(actiFunc);
+
+                    backPropogate(actiFunc, getOutput(), expected);
 
                     double slope = findWeightSlope(l, j, k);
 
@@ -162,6 +165,10 @@ public class Network {
         for (int l = 0; l < biases.length; l++) {
             for (int j = 0; j < biases[l].getDimension(); j++) {
 
+                compute(actiFunc);
+
+                backPropogate(actiFunc, getOutput(), expected);
+
                 double slope = findBiasSlope(l).getValue(j);
 
                 biases[l].setValue(j, biases[l].getValue(j) - (slope / (slope * slope + 1)) * stepSize);
@@ -169,6 +176,92 @@ public class Network {
             }
         }
         //System.out.println(cost(getOutput(),expected));
+    }
+
+    public void partialGradientDiscent(Vector expected, int numWChanges, int numBChanges, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
+
+        int[] rands = new int[numWChanges];
+
+        int totalWeights = 0;
+
+        for (int i = 0; i < networkInfo.length - 1; i++) {
+            totalWeights += networkInfo[i] * networkInfo[i + 1];
+        }
+
+        for (int i = 0; i < numWChanges; i++) {
+            rands[i] = (int) (Math.random() * totalWeights);
+        }
+
+        //System.out.println(cost(getOutput(),expected));
+        for (int l = 0; l < networkInfo.length - 1; l++) {//for every layer
+            for (int j = 0; j < networkInfo[l + 1]; j++) {//for every weight vector
+                for (int k = 0; k < networkInfo[l]; k++) {//for every weight in the vector
+                    for (int i = 0; i < numWChanges; i++) {
+                        if (rands[i] == 0) {
+
+                            compute(actiFunc);
+
+                            backPropogate(actiFunc, getOutput(), expected);
+
+                            double slope = findWeightSlope(l, j, k);
+
+                            weights[l].setVal(j, k, weights[l].getVal(j, k) - (slope / (slope * slope + 1)) * stepSize);
+
+                        }
+                        rands[i]--;
+                    }
+                }
+            }
+        }
+
+        rands = new int[numBChanges];
+
+        int totalBiases = 0;
+
+        for (int i = 0; i < biases.length; i++) {
+            totalBiases += biases[i].getDimension();
+        }
+
+        for (int i = 0; i < numBChanges; i++) {
+            rands[i] = (int) (Math.random() * totalBiases);
+        }
+
+        for (int l = 0; l < biases.length; l++) {
+            for (int j = 0; j < biases[l].getDimension(); j++) {
+                for (int i = 0; i < numBChanges; i++) {
+                    if (rands[i] == 0) {
+
+                        compute(actiFunc);
+
+                        backPropogate(actiFunc, getOutput(), expected);
+
+                        double slope = findBiasSlope(l).getValue(j);
+
+                        biases[l].setValue(j, biases[l].getValue(j) - (slope / (slope * slope + 1)) * stepSize);
+
+                    }
+                    rands[i]--;
+                }
+            }
+        }
+        //System.out.println(cost(getOutput(),expected));
+    }
+    
+    public void stocasticGradientDiscent(Vector expected, double learningSpeed, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
+
+        compute(actiFunc);
+
+        backPropogate(actiFunc, getOutput(), expected);
+        
+        for (int l = weights.length - 1; l >= 0; l--) {
+            weights[l] = weights[l].subtract(((errors[l].toMatrix()).multiply(values[l].toMatrix().transpose())).multiplyScalar(learningSpeed));
+        }
+        
+
+        for (int l = biases.length - 1; l >= 0; l--) {
+            Vector temp = biases[l];
+            biases[l] = biases[l].subtract(errors[l].multiplyScalar(learningSpeed));
+        }
     }
 
     public void export(File file) throws IOException {
@@ -195,7 +288,7 @@ public class Network {
         writer.flush();
         writer.close();
     }
-    
+
     public static Network importf(File file) throws FileNotFoundException, IOException {
 
         Network output = null;
@@ -229,14 +322,14 @@ public class Network {
 
             for (int l = 0; l < networkInfo.length - 1; l++) {
 
-                for (int j = 0; j < networkInfo[l+1]; j++) {
+                for (int j = 0; j < networkInfo[l + 1]; j++) {
 
                     for (int k = 0; k < networkInfo[l]; k++) {
 
                         line = reader.readLine();
 
                         double weightVal = Double.parseDouble(line);
-                        
+
                         output.setweight(l, j, k, weightVal);
 
                     }

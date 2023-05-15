@@ -45,7 +45,30 @@ public class Vector {
     public double getValue(int index) {
         return contents[index];
     }
+    
+    public double entrySum(){
+        
+        double sum = 0;
+        
+        for (double entry : contents) {
+            sum += entry;
+        }
+        
+        return sum;
+    }
 
+    public Vector multiplyScalar(double num) throws VectorDimensionsDoNotMatchException {
+
+        Vector out = new Vector(contents);
+        
+        for (int i = 0; i < contents.length; i++) {
+            out.setValue(i, out.getValue(i) * num);
+        }
+        
+        return out;
+        
+    }
+    
     public double dotProduct(Vector vector) throws VectorDimensionsDoNotMatchException {
 
         double result = 0;
@@ -164,11 +187,14 @@ public class Vector {
         
         double[] vectorContents = vector.getContents();
         double[] out = contents.clone();
+        int sum = 0;
         
         for (int i = 0; i < dimension; i++) {
+            if(out[i] != vectorContents[i])
+                sum++;
             out[i] -= vectorContents[i];
         }
-
+        
         return new Vector(out);
     }
 
@@ -196,8 +222,8 @@ public class Vector {
         
         double[] out = contents.clone();
         
-        for (double entry : out) {
-            entry = func.compute(entry);
+        for (int i = 0; i < out.length; i++) {
+            out[i] = func.compute(out[i]);
         }
         
         return new Vector(out);
@@ -207,8 +233,8 @@ public class Vector {
         
         double[] out = contents.clone();
         
-        for (double entry : out) {
-            entry = func.computeDir(entry);
+        for (int i = 0; i < out.length; i++) {
+            out[i] = func.computeDir(out[i]);
         }
         
         return new Vector(out);

@@ -76,6 +76,51 @@ public class Matrix {
         }
 
     }
+    
+    public double entrySum(){
+        
+        double sum = 0;
+        
+        for(double[] row : contents){
+            for(double colomb : row){
+                sum += colomb;
+            }
+        }
+        
+        return sum;
+    }
+    
+    public Matrix subtract(Matrix mat) throws MatrixDimensionsDoNotMatchException {
+        
+        if(mat.getDimensions()[0] != dimensions[0] || mat.getDimensions()[1] != dimensions[1]){
+            throw new MatrixDimensionsDoNotMatchException();
+        }
+        
+        Matrix out = new Matrix(dimensions);
+        
+        for (int i = 0; i < dimensions[0]; i++) {
+            for (int j = 0; j < dimensions[1]; j++) {
+                out.setVal(i, j, contents[i][j] - mat.getVal(i, j));
+            }
+        }
+        
+        return out;
+        
+    }
+    
+    public Matrix multiplyScalar(double num){
+        
+        Matrix out = new Matrix(dimensions);
+        
+        for (int i = 0; i < dimensions[0]; i++) {
+            for (int j = 0; j < dimensions[1]; j++) {
+                out.setVal(i, j, contents[i][j] * num);
+            }
+        }
+        
+        return out;
+        
+    }
 
     public Matrix multiply(Matrix mat) throws MatrixDimensionsDoNotMatchException {
 

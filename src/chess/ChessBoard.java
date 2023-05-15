@@ -58,6 +58,28 @@ public class ChessBoard {
 
         black.add(new Queen(4, 8, 0));
     }
+    
+    public boolean legalMove(int x1, int y1, int x2, int y2){
+        
+        ArrayList<Piece> team;
+        ArrayList<Piece> otherTeam;
+        
+        if (turn == 0){
+            team = black;
+            otherTeam = white;
+        }else{
+            team = white;
+            otherTeam = black;
+        }
+        
+        for(Piece piece : team){
+            if(piece.getPieceLocation()[0] == x1 && piece.getPieceLocation()[1] == y1 && piece.canMove(x2, y2, otherTeam, team)){
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
     public int inCheck(int colour) {
 
@@ -290,15 +312,11 @@ public class ChessBoard {
      * @param colour
      * @return
      */
-    public Vector toNNetInput(int colour) {
+    public Vector toNNetInput() {
 
         double[] output = new double[65];//every piece on the board plus an entry for the colour
 
-        for (double entry : output) {
-            entry = 0;
-        }
-
-        output[64] = colour; //the last entry is the colour;
+        output[64] = turn; //the last entry is the colour;
 
         for (Piece piece : white) {
             //             xLocation              +          yLocation * 8    adding one since the first index should be the colour
