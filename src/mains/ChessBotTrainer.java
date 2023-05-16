@@ -52,12 +52,6 @@ public class ChessBotTrainer {
         nnet2.InitializeRandomBiases();
 
         ChessBoard cb = new ChessBoard();
-        
-        try {
-            nnet1.export(exportLoc);
-        } catch (IOException ex) {
-            Logger.getLogger(ChessBotTrainer.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
         System.out.println("all structures initialized!");
 
