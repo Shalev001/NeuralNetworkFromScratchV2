@@ -5,10 +5,14 @@ import activationFunctions.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.InputMismatchException;
 
@@ -40,7 +44,7 @@ public class Network {
             values[i] = new Vector(networkInfo[i]);
         }
         for (int i = 0; i < networkInfo.length - 1; i++) {
-            Z[i] = new Vector(networkInfo[i+1]);
+            Z[i] = new Vector(networkInfo[i + 1]);
             biases[i] = new Vector(networkInfo[i + 1]);
             errors[i] = new Vector(networkInfo[i + 1]);
             weights[i] = new Matrix(networkInfo[i + 1], networkInfo[i]);
@@ -246,17 +250,16 @@ public class Network {
         }
         //System.out.println(cost(getOutput(),expected));
     }
-    
+
     public void stocasticGradientDiscent(Vector expected, double learningSpeed, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
 
         compute(actiFunc);
 
         backPropogate(actiFunc, getOutput(), expected);
-        
+
         for (int l = weights.length - 1; l >= 0; l--) {
             weights[l] = weights[l].subtract(((errors[l].toMatrix()).multiply(values[l].toMatrix().transpose())).multiplyScalar(learningSpeed));
         }
-        
 
         for (int l = biases.length - 1; l >= 0; l--) {
             Vector temp = biases[l];
@@ -265,23 +268,21 @@ public class Network {
     }
 
     public void export(File file) throws IOException {
-        PrintWriter writer = new PrintWriter(
-                new BufferedWriter(
-                        new FileWriter(file)));
-        //file formatt:
-        writer.println(networkInfo.length);//number of layers
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        ObjectOutputStream writer = new ObjectOutputStream(fileOutputStream);
+        writer.writeInt(networkInfo.length);//number of layers
         for (int size : networkInfo) {
-            writer.println(size);// the size of each layer
+            writer.writeInt(size);// the size of each layer
         }
         for (Vector biasvec : biases) {
             for (double bias : biasvec.getContents()) {
-                writer.println(bias);//every bias for every perceptron in the network
+                writer.writeDouble(bias);//every bias for every perceptron in the network
             }
         }
         for (Matrix weightMat : weights) {
             for (int i = 0; i < weightMat.getDimensions()[0]; i++) {
                 for (int j = 0; j < weightMat.getDimensions()[1]; j++) {
-                    writer.println(weightMat.getVal(i, j));//every weight
+                    writer.writeDouble(weightMat.getVal(i, j));//every weight
                 }
             }
         }
@@ -294,17 +295,14 @@ public class Network {
         Network output = null;
 
         try {
-            BufferedReader reader = new BufferedReader(
-                    new FileReader(file));
+            FileInputStream fileInputStream = new FileInputStream(file);
+            ObjectInputStream reader = new ObjectInputStream(fileInputStream);
 
-            String line = reader.readLine();
-
-            int numLayers = Integer.parseInt(line);// getting the number of layers
+            int numLayers = reader.readInt();// getting the number of layers
             int[] networkInfo = new int[numLayers];
 
             for (int i = 0; i < numLayers; i++) {
-                line = reader.readLine();
-                networkInfo[i] = Integer.parseInt(line);//getting the layer sizes and setting the array to match
+                networkInfo[i] = reader.readInt();//getting the layer sizes and setting the array to match
             }
 
             output = new Network(networkInfo);
@@ -312,9 +310,7 @@ public class Network {
             for (int l = 0; l < networkInfo.length - 1; l++) {
                 for (int j = 0; j < networkInfo[l]; j++) {
 
-                    line = reader.readLine();
-
-                    double biasVal = Double.parseDouble(line);//getting all the biases
+                    double biasVal = reader.readDouble();//getting all the biases
 
                     output.setBias(l, j, biasVal);
                 }
@@ -325,10 +321,8 @@ public class Network {
                 for (int j = 0; j < networkInfo[l + 1]; j++) {
 
                     for (int k = 0; k < networkInfo[l]; k++) {
-
-                        line = reader.readLine();
-
-                        double weightVal = Double.parseDouble(line);
+                        
+                        double weightVal = reader.readDouble();
 
                         output.setweight(l, j, k, weightVal);
 

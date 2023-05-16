@@ -32,7 +32,7 @@ public class ChessBotTrainer {
 
         Function actiFunc = new ReLU();
 
-        File exportLoc = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\ChessBotWhite.nnet");
+        File exportLoc = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\ChessBotWhite.bin");
         File exportLoc2 = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\ChessBotBlack.nnet");
 
         int[] networkInfo = {65, 105, 226, 427, 709, 1072, 1515, 2039, 2643, 3328, 4096};
@@ -52,6 +52,12 @@ public class ChessBotTrainer {
         nnet2.InitializeRandomBiases();
 
         ChessBoard cb = new ChessBoard();
+        
+        try {
+            nnet1.export(exportLoc);
+        } catch (IOException ex) {
+            Logger.getLogger(ChessBotTrainer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         System.out.println("all structures initialized!");
 
@@ -130,6 +136,8 @@ public class ChessBotTrainer {
                     int[] coordinats = ChessBoard.indexToCoordinates(i);
                     if (!cb.legalMove(coordinats[0] + 1, coordinats[1] + 1, coordinats[2] + 1, coordinats[3] + 1)) {
                         temp[i] *= (1 + reward / 100);
+                    }else{
+                        temp[i] *= (1 - reward / 1000);
                     }
                 }
                 if (sum < 1000) {
@@ -149,7 +157,7 @@ public class ChessBotTrainer {
 
                 System.out.println(currentPlayer.cost(new Vector(temp), currentPlayer.getOutput()));
 
-            } else {//in the proccess of recording turn history and training the neural network acording to rewards
+            }/* else {//in the proccess of recording turn history and training the neural network acording to rewards
                 reward = preTurnEnemyValue - cb.getEnemyPointTotal();
                 if (reward != 0) {
                     System.out.println("############");
@@ -164,9 +172,10 @@ public class ChessBotTrainer {
                     adjustWeights(currentPlayer, currentTurnHistory, currentChoiceHistory, reward, numOWeights, numOBiases, stepSize, actiFunc);
                     adjustWeights(otherPlayer, otherTurnHistory, otherChoiceHistory, -reward, numOWeights, numOBiases, stepSize, actiFunc);
                 }
-            }
+            } *///just trying to get it to output legal moves
 
         }
+        /*
         if (cb.checkMate(0)) {
             System.out.println("white wins!");
             adjustWeights(nnet1, nnet1TurnHistory, nnet1ChoiceHistory, 50, numOWeights, numOBiases, stepSize, actiFunc);
@@ -176,6 +185,7 @@ public class ChessBotTrainer {
             adjustWeights(nnet2, nnet2TurnHistory, nnet2ChoiceHistory, 50, numOWeights, numOBiases, stepSize, actiFunc);
             adjustWeights(nnet1, nnet1TurnHistory, nnet1ChoiceHistory, -50, numOWeights, numOBiases, stepSize, actiFunc);
         }
+        */
 
         try {
             nnet1.export(exportLoc);
