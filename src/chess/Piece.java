@@ -94,6 +94,10 @@ public abstract class Piece {
     public int getPieceNum() {
         return pieceNum;
     }
+
+    public int getMoveCount() {
+        return moveCount;
+    }
     
     public void movecountdown(int num){
         moveCount -= num;

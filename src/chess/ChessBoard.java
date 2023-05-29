@@ -81,6 +81,11 @@ public class ChessBoard {
         return false;
     }
 
+    /**
+     * returns the index of the threatening piece
+     * @param colour
+     * @return 
+     */
     public int inCheck(int colour) {
 
         ArrayList<Piece> enemyPieces;
@@ -102,9 +107,11 @@ public class ChessBoard {
 
         for (int i = 0; i < enemyPieces.size(); i++) {
             if (enemyPieces.get(i).canMove(xLoc, yLoc, alliedPieces, enemyPieces)) {
+                ((King) alliedPieces.get(0)).setInCheck(true);
                 return i;
             }
         }
+        ((King) alliedPieces.get(0)).setInCheck(false);
         return -1;
     }
 
