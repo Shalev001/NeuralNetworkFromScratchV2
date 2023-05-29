@@ -26,8 +26,19 @@ public class King extends Piece {
         pieceValue = 0;
 
         inCheck = false;
+        
+        KSideR = null;
+        QSideR = null;
     }
 
+    public void setKSideR(Rook KSideR) {
+        this.KSideR = KSideR;
+    }
+
+    public void setQSideR(Rook QSideR) {
+        this.QSideR = QSideR;
+    }
+    
     public boolean isInCheck() {
         return inCheck;
     }

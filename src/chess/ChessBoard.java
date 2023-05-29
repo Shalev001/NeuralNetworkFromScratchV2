@@ -32,7 +32,9 @@ public class ChessBoard {
 
         white.add(new Rook(1, 1, 1));
         white.add(new Rook(8, 1, 1));
-
+        ((King)white.get(0)).setQSideR((Rook) white.get(9));
+        ((King)white.get(0)).setKSideR((Rook) white.get(10));
+        
         white.add(new Knight(2, 1, 1));
         white.add(new Knight(7, 1, 1));
 
@@ -49,6 +51,8 @@ public class ChessBoard {
 
         black.add(new Rook(1, 8, 0));
         black.add(new Rook(8, 8, 0));
+        ((King)black.get(0)).setQSideR((Rook) black.get(9));
+        ((King)black.get(0)).setKSideR((Rook) black.get(10));
 
         black.add(new Knight(2, 8, 0));
         black.add(new Knight(7, 8, 0));
