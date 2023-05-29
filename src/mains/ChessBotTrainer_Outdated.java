@@ -21,7 +21,7 @@ import neuralnetwork.Network;
  *
  * @author shale
  */
-public class ChessBotTrainer {
+public class ChessBotTrainer_Outdated {
 
     public static void main(String[] args) {
 
@@ -90,7 +90,7 @@ public class ChessBotTrainer {
 
             int preTurnEnemyValue = cb.getEnemyPointTotal();
 
-            Vector input = cb.toNNetInput();
+            Vector input = cb.toNNetInput_Outdated();
 
             currentPlayer.setInput(input);
 
@@ -100,7 +100,7 @@ public class ChessBotTrainer {
             Vector output = currentPlayer.getOutput();
             int choice = outputToChoice(output);
 
-            int[] coordinates = ChessBoard.indexToCoordinates(choice);
+            int[] coordinates = ChessBoard.indexToCoordinates_Outdated(choice);
 
             System.out.println(turnsPlayed);
             System.out.println("(" + (coordinates[0] + 1) + "," + (coordinates[1] + 1) + ") --> (" + (coordinates[2] + 1) + "," + (coordinates[3] + 1) + ")");
@@ -127,7 +127,7 @@ public class ChessBotTrainer {
                 double[] temp = output.getContents().clone();
                 double sum = (new Vector(temp)).entrySum();//a variable to keep track of the sum of valid outputs in orde to normalize them to 1
                 for (int i = 0; i < 4096; i++) {
-                    int[] coordinats = ChessBoard.indexToCoordinates(i);
+                    int[] coordinats = ChessBoard.indexToCoordinates_Outdated(i);
                     if (!cb.legalMove(coordinats[0] + 1, coordinats[1] + 1, coordinats[2] + 1, coordinats[3] + 1)) {
                         temp[i] *= (1 + reward / 100);
                     }else{
@@ -185,7 +185,7 @@ public class ChessBotTrainer {
             nnet1.export(exportLoc);
             nnet2.export(exportLoc2);
         } catch (IOException ex) {
-            Logger.getLogger(ChessBotTrainer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ChessBotTrainer_Outdated.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

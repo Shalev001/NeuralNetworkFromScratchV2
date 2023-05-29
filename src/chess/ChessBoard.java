@@ -84,6 +84,27 @@ public class ChessBoard {
         
         return false;
     }
+    
+    public ArrayList<int[]> getLegalMoves(){
+        
+        ArrayList<Piece> team = (turn == 0)? black : white;
+        ArrayList<Piece> otherTeam = (turn == 0)? white : black;
+        
+        ArrayList<int[]> moves = new ArrayList<>();
+        
+        for(Piece piece : team){
+            for (int i = 1; i <= 8; i++) {
+                for (int j = 1; j <= 8; j++) {
+                    if (piece.canMove(i, j, otherTeam, team)){
+                        int[] move = {i,j};
+                        moves.add(move);
+                    }
+                }
+            }
+        }
+        
+        return moves;
+    }
 
     /**
      * returns the index of the threatening piece
@@ -204,7 +225,7 @@ public class ChessBoard {
     public boolean takeNextTurn(int pxLoc, int pyLoc, int nxLoc, int nyLoc) {
         if (turn == 0) {
             ArrayList<Piece> preTurnEnemy = new ArrayList<>();
-            for (int i = 0; i < white.size(); i++) {
+            for (Piece white1 : white) {
                 preTurnEnemy.add(null);
             }
             Collections.copy(preTurnEnemy, white);
@@ -218,13 +239,18 @@ public class ChessBoard {
                             return false;
                         }
                         turn = 1;
+                        if (black.get(i).getPieceNum() == 0 && nyLoc == 1){//if the piece moved is now a pawn on the bottom rank
+                            black.remove(i);//replace it with a queen
+                            black.add(new Queen(nxLoc,nyLoc,0));
+                        }
                         return true;
                     }
                 }
             }
+            
         } else if (turn == 1) {
-            ArrayList<Piece> preTurnEnemy = new ArrayList<Piece>();
-            for (int i = 0; i < black.size(); i++) {
+            ArrayList<Piece> preTurnEnemy = new ArrayList<>();
+            for (Piece black1 : black) {
                 preTurnEnemy.add(null);
             }
             Collections.copy(preTurnEnemy, black);
@@ -238,6 +264,10 @@ public class ChessBoard {
                             return false;
                         }
                         turn = 0;
+                        if (white.get(i).getPieceNum() == 0 && nyLoc == 8){//if the piece moved is now a pawn on the top rank
+                            white.remove(i);//replace it with a queen
+                            white.add(new Queen(nxLoc,nyLoc,0));
+                        }
                         return true;
                     }
                 }
@@ -323,7 +353,7 @@ public class ChessBoard {
      * @param colour
      * @return
      */
-    public Vector toNNetInput() {
+    public Vector toNNetInput_Outdated() {
 
         double[] output = new double[65];//every piece on the board plus an entry for the colour
 
@@ -346,7 +376,7 @@ public class ChessBoard {
      * @param index
      * @return coordinates in the format: x1, y1, x2, y2
      */
-    public static int[] indexToCoordinates(int index){
+    public static int[] indexToCoordinates_Outdated(int index){
         
         int[] output = new int[4];
         
@@ -359,6 +389,51 @@ public class ChessBoard {
         output[2] = ((index % 512) % 64) % 8;
         
         return output;
+    }
+    
+    /**
+     * a method to convert the current board state into a network input following the NNUE format
+     * @return 
+     */
+    public Vector toNNetInput(){
+        double[] indexedBoard = new double[40960 * 2];
+        int[] WKingLoc = white.get(0).getPieceLocation();
+        int[] BKingLoc = black.get(0).getPieceLocation();
+        
+        if (turn == 1){// encoded from whites perspective
+            //own king
+            for(int i = 1; i < white.size() + black.size() - 1; i++){
+                Piece piece = (i < white.size())? white.get(i) : black.get((i-white.size()) + 1);
+                int pieceNum = (i < white.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+                int[] pieceLoc = piece.getPieceLocation();
+                indexedBoard[(((WKingLoc[0]-1+(WKingLoc[1]-1)*8)) * 640 + pieceNum * 64 + ((pieceLoc[0]-1+(pieceLoc[1]-1)*8)))] = 1;
+            }
+            //enemyKing
+            for(int i = 1; i < white.size() + black.size() - 1; i++){
+                Piece piece = (i < white.size())? white.get(i) : black.get((i-white.size()) + 1);
+                int pieceNum = (i < white.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+                int[] pieceLoc = piece.getPieceLocation();
+                indexedBoard[(((-BKingLoc[0]+7+(-BKingLoc[1]+7)*8)) * 640 + pieceNum * 64 + ((-pieceLoc[0]+7+(-pieceLoc[1]+7)*8)))] = 1;
+            }
+            return new Vector(indexedBoard);
+            
+        }else{//encoded from blacks perspective
+            //own king
+            for(int i = 1; i < white.size() + black.size() - 1; i++){
+                Piece piece = (i < black.size())? black.get(i) : white.get((i-black.size()) + 1);
+                int pieceNum = (i < black.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+                int[] pieceLoc = piece.getPieceLocation();
+                indexedBoard[(((-WKingLoc[0]+7+(-WKingLoc[1]+7)*8)) * 640 + pieceNum * 64 + ((-pieceLoc[0]+7+(-pieceLoc[1]+7)*8)))] = 1;
+            }
+            //enemyKing
+            for(int i = 1; i < white.size() + black.size() - 1; i++){
+                Piece piece = (i < black.size())? black.get(i) : white.get((i-black.size()) + 1);
+                int pieceNum = (i < black.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+                int[] pieceLoc = piece.getPieceLocation();
+                indexedBoard[(((BKingLoc[0]-1+(BKingLoc[1]-1)*8)) * 640 + pieceNum * 64 + ((pieceLoc[0]-1+(pieceLoc[1]-1)*8)))] = 1;
+            }
+            return new Vector(indexedBoard);
+        }
     }
 
     public int getEnemyPointTotal() {

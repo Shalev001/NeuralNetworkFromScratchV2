@@ -56,6 +56,45 @@ public class Vector {
         
         return sum;
     }
+    
+    /**
+     * a method to split a vector into n parts. assumes that the dimension is divisible by n
+     * @param n
+     * @return 
+     */
+    public Vector[] split(int n){
+        
+        Vector[] out = new Vector[n];
+        
+        for (int i = 0; i < n; i++) {
+            out[i] = new Vector(dimension/n);
+        }
+        for (int i = 0; i < dimension; i++) {
+            out[i/(dimension/n)].setValue(i%(dimension/n), contents[i]);
+        }
+        return out;
+    }
+    
+    public static Vector merge(Vector[] vecs){
+        
+        int total = 0;
+        
+        for (int i = 0; i < vecs.length; i++) {
+            total += vecs[i].getDimension();
+        }
+        
+        Vector out = new Vector(total);
+        
+        int index = 0;
+        for (Vector vec : vecs) {
+            for(double num : vec.getContents()){
+                out.setValue(index, num);
+                index++;
+            }
+        }
+        
+        return out;
+    }
 
     public Vector multiplyScalar(double num) throws VectorDimensionsDoNotMatchException {
 

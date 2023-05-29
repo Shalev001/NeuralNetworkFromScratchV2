@@ -2,18 +2,13 @@ package neuralnetwork;
 
 import MatrixVector.*;
 import activationFunctions.*;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.util.InputMismatchException;
 
 /**
@@ -30,10 +25,28 @@ public class Network {
     Vector[] biases;
     Vector[] errors;
     Matrix[] weights;
+    int splitInput;
 
     public Network(int[] networkInfo) {
 
-        this.networkInfo = networkInfo;
+        splitInput = 1;
+        
+        int length = networkInfo.length;
+        for (int i = 0; i < networkInfo.length; i++) {
+            if (networkInfo[i] < 0){
+                length -= 1;
+                splitInput = -networkInfo[i];
+            }
+        }
+        this.networkInfo = new int[length];
+        
+        int index = 0;
+        for (int i = 0; i < networkInfo.length; i++) {
+            if (networkInfo[i] > 0){
+                this.networkInfo[index] = networkInfo[i];
+                index++;
+            }
+        }
         values = new Vector[networkInfo.length];
         Z = new Vector[networkInfo.length - 1];
         biases = new Vector[networkInfo.length - 1];//there is no reson for the first layer to have biases since it does not compute anything
@@ -48,6 +61,9 @@ public class Network {
             biases[i] = new Vector(networkInfo[i + 1]);
             errors[i] = new Vector(networkInfo[i + 1]);
             weights[i] = new Matrix(networkInfo[i + 1], networkInfo[i]);
+        }
+        if (splitInput != 1){
+            weights[0] = new Matrix(networkInfo[1]/splitInput, networkInfo[0]/splitInput);
         }
     }
 
@@ -89,7 +105,20 @@ public class Network {
 
     public void compute(Function actiFunc) {
 
-        for (int i = 1; i < networkInfo.length; i++) {//not calculating the values for the first layer
+        int skip = (splitInput != 1)? 1 : 0;//if the first layer is split computing the first layer values is a bit diffrent 
+        
+        if (splitInput != 1){
+            Vector[] inputs = values[0].split(splitInput);
+            Vector[] nBiases = biases[0].split(splitInput);
+            Vector[] outputs = Z[0].split(splitInput);
+            for (int i = 0; i < splitInput; i++) {
+                outputs[i] = weights[0].multiply(inputs[i]).add(nBiases[i]);
+            }
+            Z[0] = Vector.merge(outputs);
+            values[1] = Z[0].applyFunction(actiFunc);
+        }
+        
+        for (int i = 1 + skip; i < networkInfo.length; i++) {//not calculating the values for the first layer
             Z[i - 1] = weights[i - 1].multiply(values[i - 1]).add(biases[i - 1]);
             values[i] = Z[i - 1].applyFunction(actiFunc);
         }
