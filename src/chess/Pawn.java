@@ -19,6 +19,12 @@ public class Pawn extends Piece {
 
         pieceValue = 1;
     }
+
+    public Piece clone(){
+        Piece out = new Pawn(pieceLocation[0],pieceLocation[1],pieceColour);
+        out.setMoveCount(moveCount);
+        return out;
+    }
     
     public int[][] spacesBetween(int xLoc,int yLoc){
         return null;

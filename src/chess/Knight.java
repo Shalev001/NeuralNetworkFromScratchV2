@@ -19,6 +19,12 @@ public class Knight extends Piece {
 
         pieceValue = 3;
     }
+    
+    public Piece clone(){
+        Piece out = new Knight(pieceLocation[0],pieceLocation[1],pieceColour);
+        out.setMoveCount(moveCount);
+        return out;
+    }
 
     public int[][] spacesBetween(int xLoc, int yLoc) {
         return null;

@@ -7,6 +7,7 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collections;
 import MatrixVector.Vector;
+import java.util.Arrays;
 
 /**
  *
@@ -32,9 +33,9 @@ public class ChessBoard {
 
         white.add(new Rook(1, 1, 1));
         white.add(new Rook(8, 1, 1));
-        ((King)white.get(0)).setQSideR((Rook) white.get(9));
-        ((King)white.get(0)).setKSideR((Rook) white.get(10));
-        
+        ((King) white.get(0)).setQSideR((Rook) white.get(9));
+        ((King) white.get(0)).setKSideR((Rook) white.get(10));
+
         white.add(new Knight(2, 1, 1));
         white.add(new Knight(7, 1, 1));
 
@@ -51,8 +52,8 @@ public class ChessBoard {
 
         black.add(new Rook(1, 8, 0));
         black.add(new Rook(8, 8, 0));
-        ((King)black.get(0)).setQSideR((Rook) black.get(9));
-        ((King)black.get(0)).setKSideR((Rook) black.get(10));
+        ((King) black.get(0)).setQSideR((Rook) black.get(9));
+        ((King) black.get(0)).setKSideR((Rook) black.get(10));
 
         black.add(new Knight(2, 8, 0));
         black.add(new Knight(7, 8, 0));
@@ -62,63 +63,94 @@ public class ChessBoard {
 
         black.add(new Queen(4, 8, 0));
     }
-    
-    public boolean legalMove(int x1, int y1, int x2, int y2){
-        
+
+    public boolean legalMove(int x1, int y1, int x2, int y2) {
+
         ArrayList<Piece> team;
         ArrayList<Piece> otherTeam;
-        
-        if (turn == 0){
+
+        if (turn == 0) {
             team = black;
             otherTeam = white;
-        }else{
+        } else {
             team = white;
             otherTeam = black;
         }
-        
-        for(Piece piece : team){
-            if(piece.getPieceLocation()[0] == x1 && piece.getPieceLocation()[1] == y1 && piece.canMove(x2, y2, otherTeam, team)){
+
+        for (Piece piece : team) {
+            if (piece.getPieceLocation()[0] == x1 && piece.getPieceLocation()[1] == y1 && piece.canMove(x2, y2, otherTeam, team)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
-    public ArrayList<int[]> getLegalMoves(){
-        
-        ArrayList<Piece> team = (turn == 0)? black : white;
-        ArrayList<Piece> otherTeam = (turn == 0)? white : black;
-        
+
+    public ArrayList<int[]> getLegalMoves() {
+
+        ArrayList<Piece> team = (turn == 0) ? black : white;
+        ArrayList<Piece> otherTeam = (turn == 0) ? white : black;
+
         ArrayList<int[]> moves = new ArrayList<>();
-        
-        for(Piece piece : team){
-            for (int i = 1; i <= 8; i++) {
-                for (int j = 1; j <= 8; j++) {
-                    if (piece.canMove(i, j, otherTeam, team)){
-                        int[] move = {i,j};
-                        moves.add(move);
+
+        for (int i = 0; i < team.size(); i++) {
+            Piece piece = team.get(i);
+            for (int j = 1; j <= 8; j++) {
+                for (int k = 1; k <= 8; k++) {
+                    if (piece.canMove(j, k, otherTeam, team)) {
+
+                        ArrayList<Piece> preTurnAllies = new ArrayList<>();
+                        for (Piece alliedPiece : team) {
+                            preTurnAllies.add(alliedPiece.clone());
+                        }
+
+                        ArrayList<Piece> preTurnEnemy = new ArrayList<>();
+                        for (Piece enemyPiece : otherTeam) {
+                            preTurnEnemy.add(enemyPiece.clone());
+                        }
+
+                        int[] move = {piece.getPieceLocation()[0], piece.getPieceLocation()[1], j, k};
+                        piece.move(j, k, otherTeam, team);
+                        
+                        if (!wouldBeInCheck(j, k, (turn == 0)? 1 : 0)) {
+                            moves.add(move);
+                        }
+                        piece.setLocation(move[0], move[1]);
+                        piece.movecountdown(1);
+
+                        if (turn == 0) {
+                            black = preTurnAllies;
+                            team = preTurnAllies;
+                            white = preTurnEnemy;
+                            otherTeam = preTurnEnemy;
+                        } else {
+                            white = preTurnAllies;
+                            team = preTurnAllies;
+                            black = preTurnEnemy;
+                            otherTeam = preTurnEnemy;
+                        }
                     }
                 }
             }
         }
-        
+
         return moves;
     }
 
     /**
      * returns the index of the threatening piece
+     *
      * @param colour
-     * @return 
+     * @return
      */
-    public int inCheck(int colour) {
+    public int inCheck() {
 
         ArrayList<Piece> enemyPieces;
         ArrayList<Piece> alliedPieces;
         int xLoc;
         int yLoc;
 
-        if (colour == 0) {
+        if (turn == 0) {
             enemyPieces = white;
             alliedPieces = black;
             xLoc = black.get(0).getPieceLocation()[0];
@@ -142,53 +174,36 @@ public class ChessBoard {
 
     private boolean wouldBeInCheck(int xLoc, int yLoc, int colour) {
 
-        int xOrg;
-        int yOrg;
         ArrayList<Piece> enemyPieces;
         ArrayList<Piece> alliedPieces;
-        ArrayList<Piece> preTurnEnemy;
+        ArrayList<Piece> preTurnAllies = new ArrayList<>();
 
         if (colour == 0) {
-            xOrg = black.get(0).pieceLocation[0];
-            yOrg = black.get(0).pieceLocation[1];
             enemyPieces = white;
             alliedPieces = black;
-
-            preTurnEnemy = (ArrayList<Piece>) white.clone();
-
         } else {
-            xOrg = white.get(0).pieceLocation[0];
-            yOrg = white.get(0).pieceLocation[1];
             enemyPieces = black;
             alliedPieces = white;
+        }
 
-            preTurnEnemy = (ArrayList<Piece>) black.clone();
+        for (Piece alliedPiece : alliedPieces) {
+            preTurnAllies.add(alliedPiece.clone());
         }
 
         boolean flag = false;
+        alliedPieces.remove(0);
 
-        if (alliedPieces.get(0).move(xLoc, yLoc, enemyPieces, alliedPieces)) {
-
-            for (int i = 0; i < enemyPieces.size(); i++) {
-                if (enemyPieces.get(i).canMove(xLoc, yLoc, alliedPieces, enemyPieces)) {
-                    alliedPieces.get(0).move(xOrg, yOrg, enemyPieces, alliedPieces);
-                    alliedPieces.get(0).movecountdown(2);
-                    enemyPieces = preTurnEnemy;
-                    flag = true;
-                }
+        for (int i = 0; i < enemyPieces.size(); i++) {
+            if (enemyPieces.get(i).canMove(xLoc, yLoc, alliedPieces, enemyPieces)) {
+                flag = true;
             }
-            alliedPieces.get(0).move(xOrg, yOrg, enemyPieces, alliedPieces);
-            alliedPieces.get(0).movecountdown(2);
-            enemyPieces = preTurnEnemy;
         }
 
         if (colour == 0) {
-            white = enemyPieces;
-            black = alliedPieces;
+            black = preTurnAllies;
 
         } else {
-            black = enemyPieces;
-            white = alliedPieces;
+            white = preTurnAllies;
         }
 
         return flag;
@@ -232,22 +247,22 @@ public class ChessBoard {
             for (int i = 0; i < black.size(); i++) {
                 if (black.get(i).getPieceLocation()[0] == pxLoc && black.get(i).getPieceLocation()[1] == pyLoc) {
                     if (black.get(i).move(nxLoc, nyLoc, white, black)) {
-                        if (inCheck(turn) != -1) {
-                            black.get(i).move(pxLoc, pyLoc, white, black);
-                            black.get(i).movecountdown(2);
+                        if (inCheck() != -1) {
+                            black.get(i).setLocation(pxLoc, pyLoc);
+                            black.get(i).movecountdown(1);
                             white = preTurnEnemy;
                             return false;
                         }
                         turn = 1;
-                        if (black.get(i).getPieceNum() == 0 && nyLoc == 1){//if the piece moved is now a pawn on the bottom rank
+                        if (black.get(i).getPieceNum() == 0 && nyLoc == 1) {//if the piece moved is now a pawn on the bottom rank
                             black.remove(i);//replace it with a queen
-                            black.add(new Queen(nxLoc,nyLoc,0));
+                            black.add(new Queen(nxLoc, nyLoc, 0));
                         }
                         return true;
                     }
                 }
             }
-            
+
         } else if (turn == 1) {
             ArrayList<Piece> preTurnEnemy = new ArrayList<>();
             for (Piece black1 : black) {
@@ -257,16 +272,16 @@ public class ChessBoard {
             for (int i = 0; i < white.size(); i++) {
                 if (white.get(i).getPieceLocation()[0] == pxLoc && white.get(i).getPieceLocation()[1] == pyLoc) {
                     if (white.get(i).move(nxLoc, nyLoc, black, white)) {
-                        if (inCheck(turn) != -1) {
-                            white.get(i).move(pxLoc, pyLoc, black, white);
-                            white.get(i).movecountdown(2);
+                        if (inCheck() != -1) {
+                            white.get(i).setLocation(pxLoc, pyLoc);
+                            white.get(i).movecountdown(1);
                             black = preTurnEnemy;
                             return false;
                         }
                         turn = 0;
-                        if (white.get(i).getPieceNum() == 0 && nyLoc == 8){//if the piece moved is now a pawn on the top rank
+                        if (white.get(i).getPieceNum() == 0 && nyLoc == 8) {//if the piece moved is now a pawn on the top rank
                             white.remove(i);//replace it with a queen
-                            white.add(new Queen(nxLoc,nyLoc,0));
+                            white.add(new Queen(nxLoc, nyLoc, 0));
                         }
                         return true;
                     }
@@ -276,10 +291,24 @@ public class ChessBoard {
         return false;
     }
 
-    public boolean checkMate(int colour) {//########## this is the problem
+    public boolean takeRandomMove() {
+
+        ArrayList<int[]> moves = getLegalMoves();
+
+        if (moves.isEmpty()) {
+            return false;
+        }
+
+        int rand = (int) (Math.random() * moves.size());
+
+        int[] move = moves.get(rand);
+        return takeNextTurn(move[0], move[1], move[2], move[3]);
+    }
+
+    public boolean checkMate() {//########## this is the problem
 
         //this if statement is broken
-        if (!KingUnableToMove(colour)) {// if the king can move, not checkmate
+        if (!KingUnableToMove(turn)) {// if the king can move, not checkmate
             return false;
         }
 
@@ -288,7 +317,7 @@ public class ChessBoard {
         int xLoc;
         int yLoc;
 
-        if (colour == 0) {
+        if (turn == 0) {
             enemyPieces = white;
             alliedPieces = black;
             xLoc = black.get(0).getPieceLocation()[0];
@@ -301,10 +330,10 @@ public class ChessBoard {
         }
 
         //finding the piece that is threataning the king
-        if (inCheck(colour) == -1) {
+        if (inCheck() == -1) {
             return false;
         }
-        Piece threataningPiece = enemyPieces.get(inCheck(colour));
+        Piece threataningPiece = enemyPieces.get(inCheck());
 
         //if the piece is a pawn or knight the only option is to take it
         if (threataningPiece.getPieceNum() == 0 || threataningPiece.getPieceNum() == 2) {
@@ -338,6 +367,10 @@ public class ChessBoard {
 
     }
 
+    public boolean staleMate() {
+        return getLegalMoves().isEmpty() || (black.size() == 1 && white.size() == 1);
+    }
+
     public ArrayList<Piece> getWhite() {
         return white;
     }
@@ -369,68 +402,72 @@ public class ChessBoard {
 
         return new Vector(output);
     }
-    
+
     /**
-     * a method to convert an integer indexing a 4 dimensional space with 8 entries per dimension into coordinates
-     * the first two dimensions are the original x/y and the second two are the new x/y
+     * a method to convert an integer indexing a 4 dimensional space with 8
+     * entries per dimension into coordinates the first two dimensions are the
+     * original x/y and the second two are the new x/y
+     *
      * @param index
      * @return coordinates in the format: x1, y1, x2, y2
      */
-    public static int[] indexToCoordinates_Outdated(int index){
-        
+    public static int[] indexToCoordinates_Outdated(int index) {
+
         int[] output = new int[4];
-        
+
         output[1] = index / 512;
-        
+
         output[0] = (index % 512) / 64;
-        
+
         output[3] = ((index % 512) % 64) / 8;
-        
+
         output[2] = ((index % 512) % 64) % 8;
-        
+
         return output;
     }
-    
+
     /**
-     * a method to convert the current board state into a network input following the NNUE format
-     * @return 
+     * a method to convert the current board state into a network input
+     * following the NNUE format
+     *
+     * @return
      */
-    public Vector toNNetInput(){
+    public Vector toNNetInput() {
         double[] indexedBoard = new double[40960 * 2];
         int[] WKingLoc = white.get(0).getPieceLocation();
         int[] BKingLoc = black.get(0).getPieceLocation();
-        
-        if (turn == 1){// encoded from whites perspective
+
+        if (turn == 1) {// encoded from whites perspective
             //own king
-            for(int i = 1; i < white.size() + black.size() - 1; i++){
-                Piece piece = (i < white.size())? white.get(i) : black.get((i-white.size()) + 1);
-                int pieceNum = (i < white.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+            for (int i = 1; i < white.size() + black.size() - 1; i++) {
+                Piece piece = (i < white.size()) ? white.get(i) : black.get((i - white.size()) + 1);
+                int pieceNum = (i < white.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((WKingLoc[0]-1+(WKingLoc[1]-1)*8)) * 640 + pieceNum * 64 + ((pieceLoc[0]-1+(pieceLoc[1]-1)*8)))] = 1;
+                indexedBoard[(((WKingLoc[0] - 1 + (WKingLoc[1] - 1) * 8)) * 640 + pieceNum * 64 + ((pieceLoc[0] - 1 + (pieceLoc[1] - 1) * 8)))] = 1;
             }
             //enemyKing
-            for(int i = 1; i < white.size() + black.size() - 1; i++){
-                Piece piece = (i < white.size())? white.get(i) : black.get((i-white.size()) + 1);
-                int pieceNum = (i < white.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+            for (int i = 1; i < white.size() + black.size() - 1; i++) {
+                Piece piece = (i < white.size()) ? white.get(i) : black.get((i - white.size()) + 1);
+                int pieceNum = (i < white.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((-BKingLoc[0]+7+(-BKingLoc[1]+7)*8)) * 640 + pieceNum * 64 + ((-pieceLoc[0]+7+(-pieceLoc[1]+7)*8)))] = 1;
+                indexedBoard[(((-BKingLoc[0] + 7 + (-BKingLoc[1] + 7) * 8)) * 640 + pieceNum * 64 + ((-pieceLoc[0] + 7 + (-pieceLoc[1] + 7) * 8)))] = 1;
             }
             return new Vector(indexedBoard);
-            
-        }else{//encoded from blacks perspective
+
+        } else {//encoded from blacks perspective
             //own king
-            for(int i = 1; i < white.size() + black.size() - 1; i++){
-                Piece piece = (i < black.size())? black.get(i) : white.get((i-black.size()) + 1);
-                int pieceNum = (i < black.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+            for (int i = 1; i < white.size() + black.size() - 1; i++) {
+                Piece piece = (i < black.size()) ? black.get(i) : white.get((i - black.size()) + 1);
+                int pieceNum = (i < black.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((-WKingLoc[0]+7+(-WKingLoc[1]+7)*8)) * 640 + pieceNum * 64 + ((-pieceLoc[0]+7+(-pieceLoc[1]+7)*8)))] = 1;
+                indexedBoard[(((-WKingLoc[0] + 7 + (-WKingLoc[1] + 7) * 8)) * 640 + pieceNum * 64 + ((-pieceLoc[0] + 7 + (-pieceLoc[1] + 7) * 8)))] = 1;
             }
             //enemyKing
-            for(int i = 1; i < white.size() + black.size() - 1; i++){
-                Piece piece = (i < black.size())? black.get(i) : white.get((i-black.size()) + 1);
-                int pieceNum = (i < black.size())? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
+            for (int i = 1; i < white.size() + black.size() - 1; i++) {
+                Piece piece = (i < black.size()) ? black.get(i) : white.get((i - black.size()) + 1);
+                int pieceNum = (i < black.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((BKingLoc[0]-1+(BKingLoc[1]-1)*8)) * 640 + pieceNum * 64 + ((pieceLoc[0]-1+(pieceLoc[1]-1)*8)))] = 1;
+                indexedBoard[(((BKingLoc[0] - 1 + (BKingLoc[1] - 1) * 8)) * 640 + pieceNum * 64 + ((pieceLoc[0] - 1 + (pieceLoc[1] - 1) * 8)))] = 1;
             }
             return new Vector(indexedBoard);
         }

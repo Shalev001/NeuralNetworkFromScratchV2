@@ -19,6 +19,12 @@ public class Rook extends Piece {
 
         pieceValue = 5;
     }
+    
+    public Piece clone(){
+        Piece out = new Rook(pieceLocation[0],pieceLocation[1],pieceColour);
+        out.setMoveCount(moveCount);
+        return out;
+    }
 
     public boolean move(int xLoc, int yLoc, ArrayList<Piece> enemyPieces, ArrayList<Piece> alliedPieces) {
 
@@ -62,13 +68,13 @@ public class Rook extends Piece {
         int[][] locs;
 
         if (xdiff != 0) {
-            locs = new int[xdiff - 1][2];
+            locs = new int[Math.abs(xdiff) - 1][2];
             for (int i = xdiff - xdiff/Math.abs(xdiff); i != 0 ; i -= xdiff/Math.abs(xdiff)) {
                 locs[Math.abs(i - xdiff/Math.abs(xdiff))][0] = xLoc - i;
                 locs[Math.abs(i - xdiff/Math.abs(xdiff))][1] = yLoc;
             }
         } else{
-            locs = new int[ydiff - 1][2];
+            locs = new int[Math.abs(ydiff) - 1][2];
             for (int i = ydiff - ydiff/Math.abs(ydiff); i != 0 ; i -= ydiff/Math.abs(ydiff)) {
                 locs[Math.abs(i - ydiff/Math.abs(ydiff))][0] = xLoc;
                 locs[Math.abs(i - ydiff/Math.abs(ydiff))][1] = yLoc - i;

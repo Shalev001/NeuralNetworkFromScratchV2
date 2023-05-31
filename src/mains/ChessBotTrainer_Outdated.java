@@ -58,7 +58,7 @@ public class ChessBotTrainer_Outdated {
         int rep = 0;
         int turnsPlayed = 0;
 
-        while (!cb.checkMate(1) && !cb.checkMate(0)) {
+        while (!cb.checkMate() && !cb.staleMate()) {
 
             rep++;
 

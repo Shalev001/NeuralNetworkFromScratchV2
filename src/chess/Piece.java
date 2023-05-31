@@ -33,6 +33,16 @@ public abstract class Piece {
         moveCount = 0;
     }
     
+    public abstract Piece clone();
+
+    public void setMoveCount(int moveCount) {
+        this.moveCount = moveCount;
+    }
+
+    public int getPieceColour() {
+        return pieceColour;
+    }
+    
     /**
      *
      * @param xLoc
@@ -87,6 +97,11 @@ public abstract class Piece {
         return pieceValue;
     }
 
+    public void setLocation(int xLoc, int yLoc){
+        pieceLocation[0] = xLoc;
+        pieceLocation[1] = yLoc;
+    }
+    
     public int[] getPieceLocation() {
         return pieceLocation;
     }

@@ -19,13 +19,19 @@ public class Bishop extends Piece {
 
         pieceValue = 3;
     }
+    public Piece clone(){
+        Piece out = new Bishop(pieceLocation[0],pieceLocation[1],pieceColour);
+        out.setMoveCount(moveCount);
+        return out;
+    }
+
 
     public int[][] spacesBetween(int xLoc, int yLoc) {
 
         int xdiff = xLoc - pieceLocation[0];
         int ydiff = yLoc - pieceLocation[1];
 
-        int[][] locs = new int[xdiff - 1][2];
+        int[][] locs = new int[Math.abs(xdiff) - 1][2];
 
         if (xdiff > 1) {
 

@@ -22,7 +22,7 @@ public class main {
         
         System.out.println(cb.toString());
         
-        while(!cb.checkMate(1) && !cb.checkMate(0)){
+        while(!cb.checkMate() && !cb.staleMate()){
             if (cb.getTurn() == 0){
                 System.out.println("black's turn, enter the [x,y] of the piece you want to meet followed by the new [x,y] (seperated by spaces)");
             }else{
@@ -39,9 +39,9 @@ public class main {
                 System.out.println(cb.toString());
             }
         }
-        if (cb.checkMate(0)){
+        if (cb.getTurn() == 0){// if black is in checkmate, white wins and vise versa
             System.out.println("white wins!");
-        }else if (cb.checkMate(1)){
+        }else if (cb.getTurn() == 1){
             System.out.println("black wins!");
         }
     }

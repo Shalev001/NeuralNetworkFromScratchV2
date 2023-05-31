@@ -30,6 +30,23 @@ public class King extends Piece {
         KSideR = null;
         QSideR = null;
     }
+    
+    public Piece clone(){
+        Piece out = new King(pieceLocation[0],pieceLocation[1],pieceColour);
+        ((King)out).setKSideR((Rook)KSideR.clone());
+        ((King)out).setQSideR((Rook)QSideR.clone());
+        ((King)out).setInCheck(inCheck);
+        out.setMoveCount(moveCount);
+        return out;
+    }
+    
+    public Rook getKSideR() {
+        return KSideR;
+    }
+
+    public Rook getQSideR() {
+        return QSideR;
+    }
 
     public void setKSideR(Rook KSideR) {
         this.KSideR = KSideR;
@@ -60,14 +77,14 @@ public class King extends Piece {
         if (pieceColour == 1) {
             if (xLoc == 7 && yLoc == 1 && moveCount == 0 && KSideR.getMoveCount() == 0) {
                 
-                KSideR.move(6, 1, enemyPieces, alliedPieces);
+                KSideR.setLocation(6, 1);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
                 
             } else if (xLoc == 3 && yLoc == 1 && moveCount == 0 && QSideR.getMoveCount() == 0) {
                 
-                KSideR.move(4, 1, enemyPieces, alliedPieces);
+                QSideR.setLocation(4, 1);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
@@ -76,7 +93,7 @@ public class King extends Piece {
         } else {
             if (xLoc == 7 && yLoc == 8 && moveCount == 0 && KSideR.getMoveCount() == 0) {
                 
-                KSideR.move(6, 8, enemyPieces, alliedPieces);
+                KSideR.setLocation(6, 8);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
@@ -84,7 +101,7 @@ public class King extends Piece {
                 
             } else if (xLoc == 3 && yLoc == 8 && moveCount == 0 && QSideR.getMoveCount() == 0) {
                 
-                KSideR.move(4, 8, enemyPieces, alliedPieces);
+                QSideR.setLocation(4, 8);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
