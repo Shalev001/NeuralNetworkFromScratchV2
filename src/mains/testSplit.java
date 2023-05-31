@@ -6,6 +6,7 @@ package mains;
 
 import MatrixVector.Vector;
 import chess.ChessBoard;
+import chess.King;
 
 /**
  *
@@ -20,14 +21,18 @@ public class testSplit {
         int blackWins = 0;
         int staleMates = 0;
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
 
             ChessBoard cb = new ChessBoard();
+            // this is a bit jank but what it does is makes the king aware of its position on the board so it can know
+            //if it is in check or not. this cannot be done in the constructor because you can not referance an object inside itself
+            ((King)(cb.getWhite().get(0))).setBoard(cb);
+            ((King)(cb.getBlack().get(0))).setBoard(cb);
 
             while (!cb.checkMate() && !cb.staleMate()) {
                 
                 cb.takeRandomMove();
-                System.out.println(cb.toString());
+                //System.out.println(cb.toString());
                 turncount++;
                 
             }
@@ -39,14 +44,14 @@ public class testSplit {
             } else if (cb.getTurn() == 1) {
                 blackWins++;
             }
-            if (i % 1 == 0){
+            if (i % 10 == 0){
                 System.out.println(i);
             }
         }
-        System.out.println("average turn count: " + ((double) turncount/100));
-        System.out.println("white win %: " + (whiteWins));
-        System.out.println("black win %: " + (blackWins));
-        System.out.println("stalemate %: " + (staleMates));
+        System.out.println("average turn count: " + ((double) turncount/1000));
+        System.out.println("white win %: " + ((double)whiteWins)/10);
+        System.out.println("black win %: " + ((double)blackWins)/10);
+        System.out.println("stalemate %: " + ((double)staleMates)/10);
     }
 
 }

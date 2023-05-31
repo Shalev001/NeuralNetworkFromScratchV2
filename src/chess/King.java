@@ -17,6 +17,7 @@ public class King extends Piece {
     // variables to keep track of the allied rooks for casteling
     Rook KSideR;
     Rook QSideR;
+    ChessBoard cb;
 
     public King(int xLoc, int yLoc, int pieceColor) {
         super(xLoc, yLoc, pieceColor);
@@ -26,20 +27,27 @@ public class King extends Piece {
         pieceValue = 0;
 
         inCheck = false;
-        
+
         KSideR = null;
         QSideR = null;
+        
+        cb = null;
+
     }
-    
-    public Piece clone(){
-        Piece out = new King(pieceLocation[0],pieceLocation[1],pieceColour);
-        ((King)out).setKSideR((Rook)KSideR.clone());
-        ((King)out).setQSideR((Rook)QSideR.clone());
-        ((King)out).setInCheck(inCheck);
+    public void setBoard(ChessBoard cb){
+        this.cb = cb;
+    }
+
+    public Piece clone() {
+        Piece out = new King(pieceLocation[0], pieceLocation[1], pieceColour);
+        ((King)out).setBoard(cb);
+        ((King) out).setKSideR((Rook) KSideR.clone());
+        ((King) out).setQSideR((Rook) QSideR.clone());
+        ((King) out).setInCheck(inCheck);
         out.setMoveCount(moveCount);
         return out;
     }
-    
+
     public Rook getKSideR() {
         return KSideR;
     }
@@ -55,7 +63,7 @@ public class King extends Piece {
     public void setQSideR(Rook QSideR) {
         this.QSideR = QSideR;
     }
-    
+
     public boolean isInCheck() {
         return inCheck;
     }
@@ -68,6 +76,28 @@ public class King extends Piece {
         return null;
     }
 
+    public int inCheck() {
+
+        int xLoc;
+        int yLoc;
+
+        xLoc = getPieceLocation()[0];
+        yLoc = getPieceLocation()[1];
+        
+        ArrayList<Piece> allies = (cb.getTurn() == 0) ? cb.getBlack() : cb.getWhite();
+        ArrayList<Piece> enemies = (cb.getTurn() == 0) ? cb.getWhite() : cb.getBlack();
+        
+        
+        for (int i = 0; i < enemies.size(); i++) {
+            if (enemies.get(i).canMove(xLoc, yLoc, allies, enemies)) {
+                setInCheck(true);
+                return i;
+            }
+        }
+        setInCheck(false);
+        return -1;
+    }
+
     public boolean move(int xLoc, int yLoc, ArrayList<Piece> enemyPieces, ArrayList<Piece> alliedPieces) {
 
         if (!onBoard(xLoc, yLoc) || alliedPieceThere(xLoc, yLoc, alliedPieces) || !canMove(xLoc, yLoc, enemyPieces, alliedPieces)) {
@@ -76,31 +106,31 @@ public class King extends Piece {
 
         if (pieceColour == 1) {
             if (xLoc == 7 && yLoc == 1 && moveCount == 0 && KSideR.getMoveCount() == 0) {
-                
+
                 KSideR.setLocation(6, 1);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
-                
+
             } else if (xLoc == 3 && yLoc == 1 && moveCount == 0 && QSideR.getMoveCount() == 0) {
-                
+
                 QSideR.setLocation(4, 1);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
-                
+
             }
         } else {
             if (xLoc == 7 && yLoc == 8 && moveCount == 0 && KSideR.getMoveCount() == 0) {
-                
+
                 KSideR.setLocation(6, 8);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
                 moveCount++;
                 return true;
-                
+
             } else if (xLoc == 3 && yLoc == 8 && moveCount == 0 && QSideR.getMoveCount() == 0) {
-                
+
                 QSideR.setLocation(4, 8);
                 pieceLocation[0] = xLoc;
                 pieceLocation[1] = yLoc;
@@ -133,34 +163,51 @@ public class King extends Piece {
             return false;
         }
 
-        if (pieceColour == 1) {
-            if (xLoc == 7 && yLoc == 1 && !alliedPieceThere(6, 1, alliedPieces)
-                    && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && KSideR.getMoveCount() == 0) {
-                return true;
-            } else if (xLoc == 3 && yLoc == 1 && !alliedPieceThere(2, 1, alliedPieces) && !alliedPieceThere(4, 1, alliedPieces)
-                    && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && enemyPieceThere(2, yLoc, enemyPieces) == -1
-                    && enemyPieceThere(4, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && QSideR.getMoveCount() == 0) {
+        int[] origin = pieceLocation.clone();
+        
+        int[] move = {xLoc,yLoc}; 
+        pieceLocation = move;
+        
+        if (inCheck() == -1) {
+
+            if (pieceColour == 1) {
+                if (xLoc == 7 && yLoc == 1 && !alliedPieceThere(6, 1, alliedPieces)
+                        && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && KSideR.getMoveCount() == 0) {
+                    pieceLocation = origin;
+                    return true;
+                } else if (xLoc == 3 && yLoc == 1 && !alliedPieceThere(2, 1, alliedPieces) && !alliedPieceThere(4, 1, alliedPieces)
+                        && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && enemyPieceThere(2, yLoc, enemyPieces) == -1
+                        && enemyPieceThere(4, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && QSideR.getMoveCount() == 0) {
+                    pieceLocation = origin;
+                    return true;
+                }
+            } else {
+                if (xLoc == 7 && yLoc == 8 && !alliedPieceThere(6, 8, alliedPieces)
+                        && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && KSideR.getMoveCount() == 0) {
+                    pieceLocation = origin;
+                    return true;
+                } else if (xLoc == 3 && yLoc == 8 && !alliedPieceThere(2, 8, alliedPieces) && !alliedPieceThere(4, 8, alliedPieces)
+                        && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && enemyPieceThere(2, yLoc, enemyPieces) == -1
+                        && enemyPieceThere(4, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && QSideR.getMoveCount() == 0) {
+                    pieceLocation = origin;
+                    return true;
+                }
+            }
+
+            pieceLocation = origin;
+            int xdiff = xLoc - pieceLocation[0];
+            int ydiff = yLoc - pieceLocation[1];
+
+            if ((Math.abs(xdiff) + Math.abs(ydiff) <= 2) && Math.abs(xdiff) < 2 && Math.abs(ydiff) < 2 && Math.abs(xdiff) + Math.abs(ydiff) > 0) {
+                
                 return true;
             }
-        } else {
-            if (xLoc == 7 && yLoc == 8 && !alliedPieceThere(6, 8, alliedPieces)
-                    && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && KSideR.getMoveCount() == 0) {
-                return true;
-            } else if (xLoc == 3 && yLoc == 8 && !alliedPieceThere(2, 8, alliedPieces) && !alliedPieceThere(4, 8, alliedPieces)
-                    && enemyPieceThere(xLoc, yLoc, enemyPieces) == -1 && enemyPieceThere(2, yLoc, enemyPieces) == -1
-                    && enemyPieceThere(4, yLoc, enemyPieces) == -1 && !inCheck && moveCount == 0 && QSideR.getMoveCount() == 0) {
-                return true;
-            }
+            
+            return false;
+
         }
-
-        int xdiff = xLoc - pieceLocation[0];
-        int ydiff = yLoc - pieceLocation[1];
-
-        if ((Math.abs(xdiff) + Math.abs(ydiff) <= 2) && Math.abs(xdiff) < 2 && Math.abs(ydiff) < 2) {
-
-            return true;
-        }
-
+        pieceLocation = origin;
         return false;
     }
+
 }

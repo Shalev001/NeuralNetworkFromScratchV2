@@ -86,7 +86,7 @@ public class ChessBoard {
         return false;
     }
 
-    public ArrayList<int[]> getLegalMoves() {
+    public ArrayList<int[]> getLegalMoves() {//the problem is probably here
 
         ArrayList<Piece> team = (turn == 0) ? black : white;
         ArrayList<Piece> otherTeam = (turn == 0) ? white : black;
@@ -110,9 +110,9 @@ public class ChessBoard {
                         }
 
                         int[] move = {piece.getPieceLocation()[0], piece.getPieceLocation()[1], j, k};
-                        piece.move(j, k, otherTeam, team);
+                        boolean turnSuccess = takeNextTurn(move[0],move[1],move[2],move[3]);
                         
-                        if (!wouldBeInCheck(j, k, (turn == 0)? 1 : 0)) {
+                        if (turnSuccess && inCheck() == -1) {//this is probably the problem
                             moves.add(move);
                         }
                         piece.setLocation(move[0], move[1]);
@@ -135,6 +135,14 @@ public class ChessBoard {
         }
 
         return moves;
+    }
+
+    public void setWhite(ArrayList<Piece> white) {
+        this.white = white;
+    }
+
+    public void setBlack(ArrayList<Piece> black) {
+        this.black = black;
     }
 
     /**
@@ -241,9 +249,8 @@ public class ChessBoard {
         if (turn == 0) {
             ArrayList<Piece> preTurnEnemy = new ArrayList<>();
             for (Piece white1 : white) {
-                preTurnEnemy.add(null);
+                preTurnEnemy.add(white1.clone());
             }
-            Collections.copy(preTurnEnemy, white);
             for (int i = 0; i < black.size(); i++) {
                 if (black.get(i).getPieceLocation()[0] == pxLoc && black.get(i).getPieceLocation()[1] == pyLoc) {
                     if (black.get(i).move(nxLoc, nyLoc, white, black)) {
@@ -368,7 +375,7 @@ public class ChessBoard {
     }
 
     public boolean staleMate() {
-        return getLegalMoves().isEmpty() || (black.size() == 1 && white.size() == 1);
+        return ((black.size() == 1 && white.size() == 1) || (getLegalMoves().isEmpty()) && !checkMate()) ;
     }
 
     public ArrayList<Piece> getWhite() {

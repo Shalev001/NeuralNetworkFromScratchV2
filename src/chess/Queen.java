@@ -32,7 +32,7 @@ public class Queen extends Piece {
         int ydiff = yLoc - pieceLocation[1];
 
         if (xdiff == ydiff) {//if its acting like a bishop
-            int[][] locs = new int[xdiff - 1][2];
+            int[][] locs = new int[Math.abs(xdiff) - 1][2];
 
             if (xdiff > 1) {
 
