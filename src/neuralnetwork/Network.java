@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 
 /**
@@ -30,41 +31,49 @@ public class Network {
     public Network(int[] networkInfo) {
 
         splitInput = 1;
-        
+
         int length = networkInfo.length;
         for (int i = 0; i < networkInfo.length; i++) {
-            if (networkInfo[i] < 0){
+            if (networkInfo[i] < 0) {
                 length -= 1;
                 splitInput = -networkInfo[i];
             }
         }
         this.networkInfo = new int[length];
-        
+
         int index = 0;
         for (int i = 0; i < networkInfo.length; i++) {
-            if (networkInfo[i] > 0){
+            if (networkInfo[i] > 0) {
                 this.networkInfo[index] = networkInfo[i];
                 index++;
             }
         }
-        values = new Vector[networkInfo.length];
-        Z = new Vector[networkInfo.length - 1];
-        biases = new Vector[networkInfo.length - 1];//there is no reson for the first layer to have biases since it does not compute anything
-        weights = new Matrix[networkInfo.length - 1];//same as above but last layer
-        errors = new Vector[networkInfo.length - 1];
+        values = new Vector[this.networkInfo.length];
+        Z = new Vector[this.networkInfo.length - 1];
+        biases = new Vector[this.networkInfo.length - 1];//there is no reson for the first layer to have biases since it does not compute anything
+        weights = new Matrix[this.networkInfo.length - 1];//same as above but last layer
+        errors = new Vector[this.networkInfo.length - 1];
 
-        for (int i = 0; i < networkInfo.length; i++) {
-            values[i] = new Vector(networkInfo[i]);
+        for (int i = 0; i < this.networkInfo.length; i++) {
+            values[i] = new Vector(this.networkInfo[i]);
         }
-        for (int i = 0; i < networkInfo.length - 1; i++) {
-            Z[i] = new Vector(networkInfo[i + 1]);
-            biases[i] = new Vector(networkInfo[i + 1]);
-            errors[i] = new Vector(networkInfo[i + 1]);
-            weights[i] = new Matrix(networkInfo[i + 1], networkInfo[i]);
+        for (int i = 0; i < this.networkInfo.length - 1; i++) {
+            Z[i] = new Vector(this.networkInfo[i + 1]);
+            biases[i] = new Vector(this.networkInfo[i + 1]);
+            errors[i] = new Vector(this.networkInfo[i + 1]);
+            weights[i] = new Matrix(this.networkInfo[i + 1], this.networkInfo[i]);
         }
-        if (splitInput != 1){
-            weights[0] = new Matrix(networkInfo[1]/splitInput, networkInfo[0]/splitInput);
+        if (splitInput != 1) {
+            weights[0] = new Matrix(this.networkInfo[1] / splitInput, this.networkInfo[0] / splitInput);
         }
+    }
+
+    public int[] getNetworkInfo() {
+        return networkInfo;
+    }
+
+    public int getSplitInput() {
+        return splitInput;
     }
 
     private void setBias(int l, int j, double val) {
@@ -105,9 +114,9 @@ public class Network {
 
     public void compute(Function actiFunc) {
 
-        int skip = (splitInput != 1)? 1 : 0;//if the first layer is split computing the first layer values is a bit diffrent 
-        
-        if (splitInput != 1){
+        int skip = (splitInput != 1) ? 1 : 0;//if the first layer is split computing the first layer values is a bit diffrent 
+
+        if (splitInput != 1) {
             Vector[] inputs = values[0].split(splitInput);
             Vector[] nBiases = biases[0].split(splitInput);
             Vector[] outputs = Z[0].split(splitInput);
@@ -117,7 +126,7 @@ public class Network {
             Z[0] = Vector.merge(outputs);
             values[1] = Z[0].applyFunction(actiFunc);
         }
-        
+
         for (int i = 1 + skip; i < networkInfo.length; i++) {//not calculating the values for the first layer
             Z[i - 1] = weights[i - 1].multiply(values[i - 1]).add(biases[i - 1]);
             values[i] = Z[i - 1].applyFunction(actiFunc);
@@ -134,13 +143,16 @@ public class Network {
 
             //formula 2
             errors[i] = weights[i + 1].multiplyTranspose(errors[i + 1]).HadamardProduct(Z[i].applyDir(actiFunc));
-
         }
     }
 
     public double findWeightSlope(int l, int j, int k) {
         //formula 4
-        return values[l].getValue(k) * errors[l].getValue(j);
+        if (splitInput == 1) {
+            return values[l].getValue(k) * errors[l].getValue(j);
+        } else {
+            return values[l].getValue(k % (networkInfo[0]) / splitInput) * errors[l].getValue(j);
+        }
     }
 
     public Vector findBiasSlope(int l) {
@@ -286,7 +298,15 @@ public class Network {
 
         backPropogate(actiFunc, getOutput(), expected);
 
-        for (int l = weights.length - 1; l >= 0; l--) {
+        int skip = (splitInput != 1) ? 1 : 0;//if the first layer is split computing the first layer values is a bit diffrent 
+
+        if (splitInput != 1) {
+            for (int i = 0; i < splitInput; i++) {
+                weights[0] = weights[0].subtract(((errors[0].split(splitInput)[i].toMatrix()).multiply(values[0].split(splitInput)[i].toMatrix().transpose())).multiplyScalar(learningSpeed));
+            }
+        }
+
+        for (int l = weights.length - 1; l >= 0 + skip; l--) {
             weights[l] = weights[l].subtract(((errors[l].toMatrix()).multiply(values[l].toMatrix().transpose())).multiplyScalar(learningSpeed));
         }
 
@@ -299,7 +319,11 @@ public class Network {
     public void export(File file) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         ObjectOutputStream writer = new ObjectOutputStream(fileOutputStream);
-        writer.writeInt(networkInfo.length);//number of layers
+        int skip = (splitInput != 1) ? 1 : 0;
+        writer.writeInt(networkInfo.length + skip);//number of layers + 1 if the first layer is split
+        if (splitInput != 1){
+            writer.writeInt(-splitInput);
+        }
         for (int size : networkInfo) {
             writer.writeInt(size);// the size of each layer
         }
@@ -335,9 +359,9 @@ public class Network {
             }
 
             output = new Network(networkInfo);
-
-            for (int l = 0; l < networkInfo.length - 1; l++) {
-                for (int j = 0; j < networkInfo[l]; j++) {
+            
+            for (int l = 0; l < output.getNetworkInfo().length - 1; l++) {
+                for (int j = 0; j < output.getNetworkInfo()[l + 1]; j++) {
 
                     double biasVal = reader.readDouble();//getting all the biases
 
@@ -345,12 +369,12 @@ public class Network {
                 }
             }
 
-            for (int l = 0; l < networkInfo.length - 1; l++) {
+            for (int l = 0; l < output.getNetworkInfo().length - 1; l++) {
 
-                for (int j = 0; j < networkInfo[l + 1]; j++) {
+                for (int j = 0; j < output.getNetworkInfo()[l + 1]/output.getSplitInput(); j++) {
 
-                    for (int k = 0; k < networkInfo[l]; k++) {
-                        
+                    for (int k = 0; k < output.getNetworkInfo()[l]/output.getSplitInput(); k++) {
+
                         double weightVal = reader.readDouble();
 
                         output.setweight(l, j, k, weightVal);

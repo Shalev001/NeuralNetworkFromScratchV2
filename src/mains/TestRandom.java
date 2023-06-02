@@ -12,7 +12,7 @@ import chess.King;
  *
  * @author shale
  */
-public class testSplit {
+public class TestRandom {
 
     public static void main(String[] args) {
 

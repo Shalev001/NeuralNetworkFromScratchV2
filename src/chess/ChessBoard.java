@@ -18,6 +18,7 @@ public class ChessBoard {
     ArrayList<Piece> white;
     ArrayList<Piece> black;
     int turn;// 0 = black turn, 1 = white turn
+    ArrayList<String> history;// this needs to be implemented
 
     public ChessBoard() {
 
@@ -450,14 +451,14 @@ public class ChessBoard {
                 Piece piece = (i < white.size()) ? white.get(i) : black.get((i - white.size()) + 1);
                 int pieceNum = (i < white.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((WKingLoc[0] - 1 + (WKingLoc[1] - 1) * 8)) * 640 + pieceNum * 64 + ((pieceLoc[0] - 1 + (pieceLoc[1] - 1) * 8)))] = 1;
+                indexedBoard[(((WKingLoc[0] - 1 + (WKingLoc[1] - 1) * 8)) * 640 + pieceNum * 64 + ((pieceLoc[0] - 1 + (pieceLoc[1] - 1) * 8)))] = 1;//indexing
             }
             //enemyKing
             for (int i = 1; i < white.size() + black.size() - 1; i++) {
                 Piece piece = (i < white.size()) ? white.get(i) : black.get((i - white.size()) + 1);
                 int pieceNum = (i < white.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((-BKingLoc[0] + 7 + (-BKingLoc[1] + 7) * 8)) * 640 + pieceNum * 64 + ((-pieceLoc[0] + 7 + (-pieceLoc[1] + 7) * 8)))] = 1;
+                indexedBoard[((((-BKingLoc[0] + 8) + (-BKingLoc[1] + 8) * 8)) * 640 + pieceNum * 64 + (((-pieceLoc[0] + 8) + (-pieceLoc[1] + 8) * 8)))] = 1;//indexing with mirrored coordinates
             }
             return new Vector(indexedBoard);
 
@@ -467,7 +468,7 @@ public class ChessBoard {
                 Piece piece = (i < black.size()) ? black.get(i) : white.get((i - black.size()) + 1);
                 int pieceNum = (i < black.size()) ? piece.getPieceNum() : piece.getPieceNum() + 5;// a king will never be encountered so its piece value should be skipped
                 int[] pieceLoc = piece.getPieceLocation();
-                indexedBoard[(((-WKingLoc[0] + 7 + (-WKingLoc[1] + 7) * 8)) * 640 + pieceNum * 64 + ((-pieceLoc[0] + 7 + (-pieceLoc[1] + 7) * 8)))] = 1;
+                indexedBoard[(((-WKingLoc[0] + 8 + (-WKingLoc[1] + 8) * 8)) * 640 + pieceNum * 64 + ((-pieceLoc[0] + 8 + (-pieceLoc[1] + 8) * 8)))] = 1;
             }
             //enemyKing
             for (int i = 1; i < white.size() + black.size() - 1; i++) {
