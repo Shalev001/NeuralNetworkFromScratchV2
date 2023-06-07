@@ -17,7 +17,6 @@ public class King extends Piece {
     // variables to keep track of the allied rooks for casteling
     Rook KSideR;
     Rook QSideR;
-    ChessBoard cb;
 
     public King(int xLoc, int yLoc, int pieceColor) {
         super(xLoc, yLoc, pieceColor);
@@ -30,19 +29,15 @@ public class King extends Piece {
 
         KSideR = null;
         QSideR = null;
-        
-        cb = null;
 
-    }
-    public void setBoard(ChessBoard cb){
-        this.cb = cb;
     }
 
     public Piece clone() {
         Piece out = new King(pieceLocation[0], pieceLocation[1], pieceColour);
-        ((King)out).setBoard(cb);
+        try{
         ((King) out).setKSideR((Rook) KSideR.clone());
         ((King) out).setQSideR((Rook) QSideR.clone());
+        }catch(NullPointerException e){}
         ((King) out).setInCheck(inCheck);
         out.setMoveCount(moveCount);
         return out;
@@ -76,27 +71,7 @@ public class King extends Piece {
         return null;
     }
 
-    public int inCheck() {
 
-        int xLoc;
-        int yLoc;
-
-        xLoc = getPieceLocation()[0];
-        yLoc = getPieceLocation()[1];
-        
-        ArrayList<Piece> allies = (cb.getTurn() == 0) ? cb.getBlack() : cb.getWhite();
-        ArrayList<Piece> enemies = (cb.getTurn() == 0) ? cb.getWhite() : cb.getBlack();
-        
-        
-        for (int i = 0; i < enemies.size(); i++) {
-            if (enemies.get(i).canMove(xLoc, yLoc, allies, enemies)) {
-                setInCheck(true);
-                return i;
-            }
-        }
-        setInCheck(false);
-        return -1;
-    }
 
     public boolean move(int xLoc, int yLoc, ArrayList<Piece> enemyPieces, ArrayList<Piece> alliedPieces) {
 
@@ -168,7 +143,6 @@ public class King extends Piece {
         int[] move = {xLoc,yLoc}; 
         pieceLocation = move;
         
-        if (inCheck() == -1) {
 
             if (pieceColour == 1) {
                 if (xLoc == 7 && yLoc == 1 && !alliedPieceThere(6, 1, alliedPieces)
@@ -204,10 +178,6 @@ public class King extends Piece {
             }
             
             return false;
-
-        }
-        pieceLocation = origin;
-        return false;
     }
 
 }

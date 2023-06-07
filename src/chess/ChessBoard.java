@@ -18,7 +18,6 @@ public class ChessBoard {
     ArrayList<Piece> white;
     ArrayList<Piece> black;
     int turn;// 0 = black turn, 1 = white turn
-    ArrayList<String> history;// this needs to be implemented
 
     public ChessBoard() {
 
@@ -63,6 +62,82 @@ public class ChessBoard {
         black.add(new Bishop(6, 8, 0));
 
         black.add(new Queen(4, 8, 0));
+    }
+
+    public ChessBoard(String boardState) {
+
+        String[] data = boardState.split(",");
+
+        white = new ArrayList();
+        black = new ArrayList();
+        turn = Integer.parseInt(data[0]);
+        
+        for (int i = 1; i < data.length; i += 5) {
+
+            int pieceColour = Integer.parseInt(data[i]);
+            int pieceNum = Integer.parseInt(data[i+1]);
+            int moveCount = Integer.parseInt(data[i+2]);
+            int[] location = {Integer.parseInt(data[i+3]),Integer.parseInt(data[i+4])};
+            
+            ArrayList<Piece> team = (pieceColour == 0) ? black : white;
+            
+            Piece piece;
+            
+            switch(pieceNum){
+                case 0:
+                    piece = new Pawn(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+                case 1:
+                    piece = new Bishop(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+                case 2:
+                    piece = new Knight(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+                case 3:
+                    piece = new Rook(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+                case 4:
+                    piece = new Queen(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+                case 5:
+                    piece = new King(location[0],location[1], pieceColour);
+                    piece.setMoveCount(moveCount);
+                    team.add(piece);
+                    break;
+            }
+        }
+    }
+
+    public String getBoardState() {
+
+        StringBuilder str = new StringBuilder();
+
+        str.append(turn).append(",");
+
+        for (Piece piece : white) {
+            str.append(piece.getPieceColour()).append(",");
+            str.append(piece.getPieceNum()).append(",");
+            str.append(piece.getMoveCount()).append(",");
+            str.append(piece.getPieceLocation()[0]).append(",").append(piece.getPieceLocation()[1]).append(",");
+        }
+        for (Piece piece : black) {
+            str.append(piece.getPieceColour()).append(",");
+            str.append(piece.getPieceNum()).append(",");
+            str.append(piece.getMoveCount()).append(",");
+            str.append(piece.getPieceLocation()[0]).append(",").append(piece.getPieceLocation()[1]).append(",");
+        }
+
+        return str.toString();
     }
 
     public boolean legalMove(int x1, int y1, int x2, int y2) {
@@ -111,8 +186,8 @@ public class ChessBoard {
                         }
 
                         int[] move = {piece.getPieceLocation()[0], piece.getPieceLocation()[1], j, k};
-                        boolean turnSuccess = takeNextTurn(move[0],move[1],move[2],move[3]);
-                        
+                        boolean turnSuccess = takeNextTurn(move[0], move[1], move[2], move[3]);
+
                         if (turnSuccess && inCheck() == -1) {//this is probably the problem
                             moves.add(move);
                         }
@@ -376,7 +451,7 @@ public class ChessBoard {
     }
 
     public boolean staleMate() {
-        return ((black.size() == 1 && white.size() == 1) || (getLegalMoves().isEmpty()) && !checkMate()) ;
+        return ((black.size() == 1 && white.size() == 1) || (getLegalMoves().isEmpty()) && !checkMate());
     }
 
     public ArrayList<Piece> getWhite() {

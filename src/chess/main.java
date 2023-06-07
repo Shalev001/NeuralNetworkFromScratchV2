@@ -16,6 +16,8 @@ public class main {
         
         ChessBoard cb = new ChessBoard();
         
+        cb = new ChessBoard(cb.getBoardState());
+        
         Scanner input = new Scanner(System.in);
         
         int[] vals = new int[4];

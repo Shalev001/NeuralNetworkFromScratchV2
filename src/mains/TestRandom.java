@@ -24,11 +24,7 @@ public class TestRandom {
         for (int i = 0; i < 1000; i++) {
 
             ChessBoard cb = new ChessBoard();
-            // this is a bit jank but what it does is makes the king aware of its position on the board so it can know
-            //if it is in check or not. this cannot be done in the constructor because you can not referance an object inside itself
-            ((King)(cb.getWhite().get(0))).setBoard(cb);
-            ((King)(cb.getBlack().get(0))).setBoard(cb);
-
+            
             while (!cb.checkMate() && !cb.staleMate()) {
                 
                 cb.takeRandomMove();
