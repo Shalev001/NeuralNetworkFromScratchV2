@@ -213,6 +213,10 @@ public class ChessBoard {
         return moves;
     }
 
+    public void setTurn(int turn) {
+        this.turn = turn;
+    }
+
     public void setWhite(ArrayList<Piece> white) {
         this.white = white;
     }
