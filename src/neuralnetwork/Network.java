@@ -188,7 +188,7 @@ public class Network {
 
     }
 
-    public void batchGradientDiscent(Vector expected, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
+    public void batchGradientDiscent_Outdated(Vector expected, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
 
         //System.out.println(cost(getOutput(),expected));
         for (int l = 0; l < networkInfo.length - 1; l++) {//for every layer
@@ -223,7 +223,7 @@ public class Network {
         //System.out.println(cost(getOutput(),expected));
     }
 
-    public void partialGradientDiscent(Vector expected, int numWChanges, int numBChanges, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
+    public void partialGradientDiscent_Outdated(Vector expected, int numWChanges, int numBChanges, double stepSize, Function actiFunc) { // only weights are being changed right now should be modified to change biases as well
 
         int[] rands = new int[numWChanges];
 
