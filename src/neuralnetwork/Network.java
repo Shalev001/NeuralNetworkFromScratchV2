@@ -103,7 +103,7 @@ public class Network {
     public void InitializeRandomBiases() {
         for (var bias : biases) {
             for (int i = 0; i < bias.getDimension(); i++) {
-                bias.setValue(i, Math.random());
+                bias.setValue(i, Math.random()*2-1);
             }
         }
     }

@@ -26,7 +26,7 @@ public class ChessBotTrainer {
     
     public static void main(String[] args){
         
-        File networkLocation = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\chessBots\\chessBot1");
+        File networkLocation = new File("C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\chessBots\\chessBot1.nnet");
         
         Network nnet = null;
         
@@ -55,11 +55,11 @@ public class ChessBotTrainer {
                 double[] winner = {(((double) Integer.parseInt(reader.readLine())) + 1) / 2};
                 
                 //at the beginning I don't want to include games that end in draws since they may slow down training so those are skipped
-                if (winner[0] == 0.5){
+                if (winner[0] == 0.5){               
                     i++;
                     break Label;
                 }
-                
+                System.out.println(i);
                 
                 ArrayList<String> boardStates = new ArrayList<>();
                 
@@ -99,7 +99,6 @@ public class ChessBotTrainer {
                     Logger.getLogger(ChessBotTrainer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            System.out.println(i);
         }
         
         try {
