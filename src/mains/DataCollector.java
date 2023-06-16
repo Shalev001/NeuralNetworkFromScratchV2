@@ -26,10 +26,10 @@ public class DataCollector {// this code is intended to generate training data
     public static void main(String[] args) {
 
         for (int i = 1; i <= 1000; i++) {
-            
+
             System.out.println(i);
 
-            String address = "C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\chessBots\\RandomGameData\\game" + i +".txt";
+            String address = "C:\\Users\\shale\\OneDrive\\Desktop\\neuralNetworks\\chessBots\\RandomGameData\\game" + i + ".txt";
 
             File location = new File(address);
 
@@ -38,23 +38,25 @@ public class DataCollector {// this code is intended to generate training data
                 writer = new PrintWriter(
                         new BufferedWriter(
                                 new FileWriter(location)));
-            
 
-            StringBuilder history = new StringBuilder();
+                StringBuilder history = new StringBuilder();
 
-            ChessBoard cb = new ChessBoard();
-            
-            while (!cb.checkMate() && !cb.staleMate()) {
-                cb.takeRandomMove();
-                history.append(cb.getBoardState()).append("\n");
-            }
+                ChessBoard cb = new ChessBoard();
 
-            int winner = (cb.staleMate()) ? 0 : ((cb.getTurn() == 0) ? 1 : -1);// stalemate = 0, white win = 1, black win = -1
+                while (!cb.checkMate() && !cb.staleMate()) {
+                    cb.takeRandomMove();
+                    history.append(cb.getBoardState()).append("\n");
+                }
 
-            writer.println(winner);
-            writer.println(history);
-            writer.flush();
-            writer.close();
+                int winner = (cb.staleMate()) ? 0 : ((cb.getTurn() == 0) ? 1 : -1);// stalemate = 0, white win = 1, black win = -1
+                if (winner != 0) {
+                    writer.println(winner);
+                    writer.println(history);
+                    writer.flush();
+                    writer.close();
+                } else {
+                    i--;
+                }
             } catch (IOException ex) {
                 Logger.getLogger(DataCollector.class.getName()).log(Level.SEVERE, null, ex);
             }

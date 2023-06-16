@@ -78,7 +78,7 @@ public class ChessBotTrainer {
                     
                     double[] temp = winner.clone();
                     //since the output should represent the liklyhood of the opposing team winning it changes depending on who's turn it is
-                    temp[0] = (cb.getTurn() == 1) ? -temp[0] : temp[0];
+                    temp[0] = (((cb.getTurn() == 1) ? -temp[0] : temp[0]) * 2) - 1;
                     Vector expected = new Vector(temp);
                     
                     nnet.setInput(cb.toNNetInput());
